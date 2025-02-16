@@ -29,6 +29,13 @@ socket.on('message', (msg) => {
     outputMessage(msg);
 });
 
+
+socket.on('roomUsers', (msg) => {
+  outputRoom(msg.room)
+  outputUsers(msg.users)
+});
+
+
 function outputMessage(message) {
     const chatMessage = document.createElement('div');
     // Every Message has a Div Class
@@ -42,3 +49,14 @@ function outputMessage(message) {
     document.querySelector('.chat-messages').appendChild(chatMessage);
 }
 
+function outputRoom(room) {
+    const roomName = document.getElementById('room-name');
+    roomName.innerText = room;
+}
+
+function outputUsers (users){
+    const userList = document.getElementById('users');
+    userList.innerHTML = `
+        ${users.map(user => `<li>${user.username}</li>`).join('')}
+    `
+}

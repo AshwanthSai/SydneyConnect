@@ -1,10 +1,10 @@
-import moment from 'moment';
 import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import http from "http"
 import {Server} from 'socket.io';
 import { formatMessage } from './utils/format.js';
+import { getCurrentUser, getRoomUsers, removeUserFromRoom, userJoin } from './utils/users.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -29,27 +29,41 @@ app.use(express.static(path.join(__dirname, 'public')));
 */
 let botName = "SydneyConnect";
 
+//Each Connection has a socket ID
 io.on('connection', (socket) => {
     socket.on('joinRoom', msg => {
+        //* Creating a user object with socket id
+        const user = userJoin(socket.id, msg.username, msg.room);
+        //* Creating a socket namespace for the room
+        socket.join(user.room);
+        
         // Sending a welcome message to the client
         socket.emit('message', formatMessage(botName,'Welcome to SydneyConnect !'));
-        
 
-        //* Write utils to Scope Broadcast to a room
-
+        //* Focussing Messages to a room from Backend
         // Broadcasting a message to all connected clients except the one that sent the message
-        socket.broadcast.emit(formatMessage(botName,'A user has entered the chat'));        
+        socket.broadcast.to(user.room).emit("message",formatMessage(botName,`A ${user.username} has entered the chat`));        
+        
+        io.emit("roomUsers", {
+            room: user.room,
+            users: getRoomUsers(user.room)
+        });
 
         // Echo back messages to the client with label Chat Message
         socket.on("Chat Message", (msg) => {
-            console.log(msg)
-            socket.emit("message", formatMessage("User",msg));
+            const user = getCurrentUser(socket.id);
+            io.to(user.room).emit("message", formatMessage(user.username,msg));
         })
     })
 
-
     socket.on("disconnect", (msg) => {
-        io.emit("message",  formatMessage(botName,"A user has left the chat"));
+        const user = getCurrentUser(socket.id);
+        removeUserFromRoom(socket.id);
+        io.emit("roomUsers", {
+            room: user.room,
+            users: getRoomUsers(user.room)
+        });
+        io.to(user.room).emit("message",  formatMessage(botName,`A ${user.username} has left the chat`));
     })
 });
 
