@@ -42,7 +42,7 @@ io.on('connection', (socket) => {
 
         //* Focussing Messages to a room from Backend
         // Broadcasting a message to all connected clients except the one that sent the message
-        socket.broadcast.to(user.room).emit("message",formatMessage(botName,`A ${user.username} has entered the chat`));        
+        socket.broadcast.to(user.room).emit("message",formatMessage(botName,`${user.username} has entered the chat`));        
         
         io.emit("roomUsers", {
             room: user.room,
