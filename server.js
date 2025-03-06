@@ -36,7 +36,7 @@ io.on('connection', (socket) => {
         const user = userJoin(socket.id, msg.username, msg.room);
         //* Creating a socket namespace for the room
         socket.join(user.room);
-        
+        no
         // Sending a welcome message to the client
         socket.emit('message', formatMessage(botName,'Welcome to SydneyConnect !'));
 
